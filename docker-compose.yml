@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # MongoDB Database Service (Optional for local testing if not using MongoDB Atlas)
+  mongodb:
+    image: mongo:7.0
+    container_name: smart-energy-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: smart_energy_db
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - energy-network
+
+  # Node.js / Express Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smart-energy-backend
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - NODE_ENV=production
+      # To use MongoDB Atlas, replace MONGO_URI with your Atlas connection string:
+      - MONGO_URI=mongodb://mongodb:27017/smart_energy_db
+      - JWT_SECRET=super_secret_jwt_key_energy_dashboard_2026_change_in_production
+      - JWT_EXPIRES_IN=7d
+      - CLIENT_URL=http://localhost:5174
+    depends_on:
+      - mongodb
+    networks:
+      - energy-network
+
+  # React / Vite / Nginx Frontend Dashboard
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: smart-energy-frontend
+    restart: unless-stopped
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
+    networks:
+      - energy-network
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  energy-network:
+    driver: bridge
+

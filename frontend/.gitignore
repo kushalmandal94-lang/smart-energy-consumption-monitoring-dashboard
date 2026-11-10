@@ -1,0 +1,16 @@
+# Frontend Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Production build outputs
+dist/
+dist-ssr/
+*.local
+
+# Logs
+*.log
+

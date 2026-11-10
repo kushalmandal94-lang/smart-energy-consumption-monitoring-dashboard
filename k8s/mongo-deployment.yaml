@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+  namespace: smart-energy
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: energy-mongodb
+  namespace: smart-energy
+  labels:
+    app: energy-mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: energy-mongodb
+  template:
+    metadata:
+      labels:
+        app: energy-mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:7.0
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+      volumes:
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+  namespace: smart-energy
+spec:
+  type: ClusterIP
+  selector:
+    app: energy-mongodb
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+
